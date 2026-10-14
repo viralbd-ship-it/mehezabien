@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Landing Page</title>
+<meta name="description" content="Video landing page with preview, download and sponsor placements.">
+<meta name="theme-color" content="#0f0f10">
+<style>
+  :root{
+    --bg:#0f0f10; --header:#141415; --card:#1b1b1d; --card-2:#232326;
+    --line:#2d2d31; --text:#ffffff; --muted:#b4b4bb;
+    --accent:#e50914; --accent-hover:#ff1f2b; --accent-active:#b80710;
+    --radius:16px; --max:960px;
+    --font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.55;overflow-x:hidden}
+  a{color:inherit}
+  :focus-visible{outline:3px solid #ffd166;outline-offset:3px;border-radius:6px}
+  .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 16px}
+
+  /* Header */
+  header.site{background:var(--header);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  header.site .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+  .logo{font-weight:800;font-size:1.3rem;letter-spacing:.5px;text-decoration:none}
+  .logo span{color:var(--accent)}
+  nav a{color:var(--muted);text-decoration:none;font-weight:600;padding:8px 10px;border-radius:8px}
+  nav a:hover{color:#fff;background:var(--card-2)}
+
+  main{padding:20px 0 40px}
+
+  /* Ads */
+  .ad{margin:18px auto;text-align:center;max-width:100%;overflow:hidden}
+  .ad-label{display:block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#85858d;margin-bottom:6px}
+  .ad-slot{display:flex;justify-content:center;max-width:100%;overflow:hidden;min-height:60px}
+  .ad-slot iframe,.ad-slot img{max-width:100%}
+  .ad-banner-box{width:100%;max-width:468px;margin:0 auto;overflow:hidden;position:relative;height:60px}
+  .ad-banner-inner{width:468px;height:60px;transform-origin:top left}
+
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .player{position:relative;display:block;width:100%;padding:0;border:0;background:#000;border-radius:12px;overflow:hidden;cursor:pointer;aspect-ratio:16/9;box-shadow:0 12px 32px rgba(0,0,0,.55);transition:transform .25s ease, box-shadow .25s ease}
+  .player img,.player video,.player .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ph{display:none;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--muted);background:linear-gradient(135deg,#1f1f23,#101012);font-size:.95rem}
+  .player.no-img .ph{display:flex}
+  .player.no-img img{display:none}
+  .play{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:rgba(229,9,20,.92);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.5);transition:transform .2s ease, background .2s ease}
+  .play svg{width:38px;height:38px;fill:#fff;margin-left:5px}
+  @media (hover:hover){
+    .player:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 18px 40px rgba(0,0,0,.65)}
+    .player:hover .play{background:var(--accent-hover);transform:scale(1.08)}
+  }
+  @media (max-width:600px){
+    .player{aspect-ratio:4/3}
+    .play{width:68px;height:68px;margin:-34px 0 0 -34px}
+    .play svg{width:30px;height:30px}
+  }
+  .meta{padding:16px 4px 4px}
+  .meta h1{margin:0 0 6px;font-size:clamp(1.2rem,3.5vw,1.7rem);line-height:1.25}
+  .meta p{margin:0;color:var(--muted)}
+
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border:0;border-radius:12px;font:inherit;font-weight:700;font-size:1.05rem;color:#fff;background:var(--accent);cursor:pointer;text-decoration:none;transition:background .15s, transform .1s}
+  .btn:hover{background:var(--accent-hover)}
+  .btn:active{background:var(--accent-active);transform:translateY(1px) scale(.99)}
+  .btn svg{width:22px;height:22px;fill:currentColor}
+  .btn.primary{flex:1 1 260px;font-size:1.15rem;min-height:58px}
+  .btn.secondary{background:var(--card-2);border:1px solid var(--line);flex:0 1 auto}
+  .btn.secondary:hover{background:#2e2e33}
+  .btn[disabled]{opacity:.7;cursor:progress}
+  .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none}
+  .btn.loading .spinner{display:inline-block}
+  .btn.loading .icon{display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .status{min-height:1.5em;margin-top:12px;color:var(--muted);font-size:.95rem}
+  .status.error{color:#ff8a8a}
+
+  /* Related */
+  h2{font-size:1.15rem;margin:28px 0 12px}
+  .related{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .rel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .rel .t{aspect-ratio:16/9;background:linear-gradient(135deg,#25252a,#141416);display:grid;place-items:center;color:#6f6f78;font-size:.85rem}
+  .rel .b{padding:10px 12px}
+  .rel .b strong{display:block;font-size:.95rem}
+  .rel .b span{color:var(--muted);font-size:.85rem}
+
+  footer{border-top:1px solid var(--line);background:var(--header);padding:22px 0;color:var(--muted);font-size:.9rem}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
+  footer a{color:var(--muted);text-decoration:none;font-weight:600}
+  footer a:hover{color:#fff;text-decoration:underline}
+
+  /* Dialog */
+  dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);padding:0;max-width:min(440px,calc(100vw - 32px));width:100%}
+  dialog::backdrop{background:rgba(0,0,0,.72)}
+  .dlg{padding:22px}
+  .dlg h3{margin:0 0 8px;font-size:1.2rem}
+  .dlg p{margin:0 0 18px;color:var(--muted)}
+  .dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  .dlg .btn{min-height:46px;font-size:1rem}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    .player:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Home">VIDEO<span>HUB</span></a>
+    <nav aria-label="Primary"><a href="#top">Home</a></nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+
+    <!-- ============ AD PLACEMENT 1 (top): external JavaScript ad ============ -->
+    <aside class="ad" aria-label="Advertisement">
+      <span class="ad-label">Advertisement</span>
+      <div class="ad-slot">
+        <script src="https://sturgeonvelocity.com/1a/80/6e/1a806ec139a767620109b6758399c1c9.js"></script>
+      </div>
+    </aside>
+
+    <article class="card">
+      <button class="player" id="player" type="button" aria-label="Play video">
+        <img id="thumb" alt="Video thumbnail" width="1280" height="720" decoding="async" fetchpriority="high">
+        <div class="ph" id="thumbFallback">Thumbnail could not be loaded.<br>Set a direct image link in THUMBNAIL_URL (see the CONFIG section in the code).</div>
+        <video id="previewVideo" playsinline controls preload="none" hidden></video>
+        <span class="play" id="playIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </span>
+      </button>
+
+      <div class="meta">
+        <h1 id="title"></h1>
+        <p id="desc"></p>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="downloadBtn" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.17l3.59-3.58L17 11l-5 5-5-5 1.41-1.41L11 13.17V3h1zM5 19h14v2H5z"/></svg>
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="downloadLabel">Download</span>
+        </button>
+        <a class="btn secondary" id="sponsorBtn" target="_blank" rel="sponsored noopener noreferrer">Visit Sponsor</a>
+      </div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </article>
+
+    <!-- ============ AD PLACEMENT 2 (below video): 468 x 60 banner ============ -->
+    <aside class="ad" aria-label="Advertisement">
+      <span class="ad-label">Advertisement</span>
+      <div class="ad-banner-box" id="bannerBox">
+        <div class="ad-banner-inner" id="bannerInner">
+          <script>
+            atOptions = {
+              'key': '895468b7eaed07986b15d35cc92103e8',
+              'format': 'iframe',
+              'height': 60,
+              'width': 468,
+              'params': {}
+            };
+          </script>
+          <script src="https://sturgeonvelocity.com/895468b7eaed07986b15d35cc92103e8/invoke.js"></script>
+        </div>
+      </div>
+    </aside>
+
+    <section aria-labelledby="relTitle">
+      <h2 id="relTitle">Related videos</h2>
+      <div class="related" id="related"></div>
+    </section>
+
+    <!-- ============ AD PLACEMENT 3 (lower content): additional ad container ============ -->
+    <aside class="ad" aria-label="Advertisement">
+      <span class="ad-label">Advertisement</span>
+      <div class="ad-slot">
+        <script async="async" data-cfasync="false" src="https://sturgeonvelocity.com/b37964aa213e4295112b2691564a5c98/invoke.js"></script>
+        <div id="container-b37964aa213e4295112b2691564a5c98"></div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="year"></span> VideoHub</span>
+    <span>
+      <a href="#" id="privacyLink">Privacy Policy</a> &nbsp;&middot;&nbsp;
+      <a href="#" id="contactLink">Contact</a>
+    </span>
+  </div>
+</footer>
+
+<!-- Confirmation dialog shown before any advertising link opens -->
+<dialog id="confirm" aria-labelledby="cTitle" aria-describedby="cText">
+  <div class="dlg">
+    <h3 id="cTitle">Continue to the video?</h3>
+    <p id="cText">This action may open an advertisement in a new tab.</p>
+    <div class="row">
+      <button class="btn secondary" id="cCancel" type="button">Cancel</button>
+      <button class="btn" id="cContinue" type="button">Continue</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* =====================================================================
+   CONFIG  -  edit the values in this block only
+   ===================================================================== */
+
+// Exact thumbnail link supplied. This is an Imgur PAGE url, which cannot be used
+// directly in <img>. The code below automatically tries the direct forms
+// (i.imgur.com/ID.jpg / .png / .webp). If none load, paste a direct image link here.
+const THUMBNAIL_URL = "https://imgur.com/tCryRZO";
+
+// Exact video source page supplied (kept for reference). It could not be verified
+// as a playable file, so it is NOT used as a video source.
+const VIDEO_SOURCE_URL = "https://imgur.com/K3Z7xRH";
+
+// OPTIONAL: a verified direct video file (e.g. https://i.imgur.com/K3Z7xRH.mp4).
+// If set, the player plays it natively. Leave empty to show thumbnail only.
+const VIDEO_DIRECT_URL = "";
+
+// Direct, downloadable file URL. Leave empty until a real file is available;
+// the Download button will then say the file is not configured.
+const DOWNLOAD_URL = "";
+
+// Advertising destination (exact URL supplied). Opened only after the visitor confirms.
+const AD_CLICK_URL = "https://sturgeonvelocity.com/cpsk36n9?key=f494b534a5d0c257002731ff150918ce";
+
+const VIDEO_TITLE = "Your Video Title Here";
+const VIDEO_DESCRIPTION = "Short description of the video. Edit VIDEO_DESCRIPTION in the CONFIG section.";
+
+// Footer links. Leave empty to show a "not configured" notice instead.
+const PRIVACY_URL = "";
+const CONTACT_URL = ""; // e.g. "mailto:you@example.com"
+
+// Placeholder related-video cards (no invented stats). Replace with real items.
+const RELATED = [
+  { title: "Related video 1", note: "Placeholder" },
+  { title: "Related video 2", note: "Placeholder" },
+  { title: "Related video 3", note: "Placeholder" }
+];
+
+/* =====================================================================
+   END CONFIG
+   ===================================================================== */
+
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  $("title").textContent = VIDEO_TITLE;
+  $("desc").textContent = VIDEO_DESCRIPTION;
+  $("year").textContent = new Date().getFullYear();
+  $("sponsorBtn").href = AD_CLICK_URL;
+
+  function setStatus(msg, isError) {
+    var s = $("status");
+    s.textContent = msg || "";
+    s.className = "status" + (isError ? " error" : "");
+  }
+
+  /* ---------- Thumbnail: resolve Imgur page URL to a direct image ---------- */
+  function thumbCandidates(url) {
+    var m = /^https?:\/\/(?:www\.)?imgur\.com\/(?:gallery\/|a\/)?([A-Za-z0-9]+)\/?$/.exec(url);
+    if (m) {
+      var id = m[1];
+      return ["jpg", "png", "webp", "jpeg"].map(function (e) { return "https://i.imgur.com/" + id + "." + e; });
+    }
+    return [url];
+  }
+  var cands = thumbCandidates(THUMBNAIL_URL), ci = 0;
+  var img = $("thumb"), player = $("player");
+  img.addEventListener("error", function () {
+    ci++;
+    if (ci < cands.length) { img.src = cands[ci]; }
+    else { player.classList.add("no-img"); }
+  });
+  img.src = cands[0];
+
+  /* ---------- Optional native video (only if a direct file is configured) ---------- */
+  var video = $("previewVideo");
+  function playNative() {
+    video.src = VIDEO_DIRECT_URL;
+    video.hidden = false;
+    $("playIcon").style.display = "none";
+    img.style.display = "none";
+    player.style.cursor = "default";
+    video.play().catch(function () {});
+  }
+
+  /* ---------- Confirm dialog ---------- */
+  var dlg = $("confirm");
+  var pendingUrl = null;
+  var lastFocus = null;
+
+  function askThenOpen(url) {
+    pendingUrl = url;
+    lastFocus = document.activeElement;
+    if (typeof dlg.showModal === "function") {
+      dlg.showModal();
+    } else if (window.confirm("Continue to the video? This action may open an advertisement in a new tab.")) {
+      openAd();
+    }
+  }
+  function openAd() {
+    if (!pendingUrl) return;
+    window.open(pendingUrl, "_blank", "noopener,noreferrer");
+    pendingUrl = null;
+  }
+  $("cContinue").addEventListener("click", function () { dlg.close(); openAd(); });
+  $("cCancel").addEventListener("click", function () { pendingUrl = null; dlg.close(); });
+  dlg.addEventListener("close", function () { if (lastFocus && lastFocus.focus) lastFocus.focus(); });
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) { pendingUrl = null; dlg.close(); } });
+
+  /* ---------- Thumbnail / play click ---------- */
+  player.addEventListener("click", function (e) {
+    if (!video.hidden) return; // already playing natively
+    e.preventDefault();
+    if (VIDEO_DIRECT_URL) { playNative(); return; }
+    askThenOpen(AD_CLICK_URL);
+  });
+
+  /* ---------- Download button ---------- */
+  var dBtn = $("downloadBtn"), dLabel = $("downloadLabel");
+  dBtn.addEventListener("click", function () {
+    if (!DOWNLOAD_URL) {
+      setStatus("The download file is not configured yet. Set DOWNLOAD_URL in the CONFIG section.", true);
+      return;
+    }
+    setStatus("");
+    dBtn.disabled = true; dBtn.classList.add("loading"); dLabel.textContent = "Preparing download...";
+    var name = DOWNLOAD_URL.split("?")[0].split("/").pop() || "video";
+    fetch(DOWNLOAD_URL, { mode: "cors" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
+      .then(function (blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+        setStatus("Your browser has started saving the file.");
+      })
+      .catch(function () {
+        // CORS or network block: fall back to a normal link to the file itself
+        var a = document.createElement("a");
+        a.href = DOWNLOAD_URL; a.download = name; a.target = "_blank"; a.rel = "noopener noreferrer";
+        document.body.appendChild(a); a.click(); a.remove();
+        setStatus("Opened the file link directly. If nothing downloads, check that DOWNLOAD_URL points to a direct file.");
+      })
+      .then(function () {
+        dBtn.disabled = false; dBtn.classList.remove("loading"); dLabel.textContent = "Download";
+      });
+  });
+
+  /* ---------- Footer links ---------- */
+  function wireFooter(id, url, label) {
+    var a = $(id);
+    if (url) { a.href = url; return; }
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      setStatus(label + " link is not configured yet. Set it in the CONFIG section.", true);
+      window.scrollTo({ top: 0 });
+    });
+  }
+  wireFooter("privacyLink", PRIVACY_URL, "Privacy Policy");
+  wireFooter("contactLink", CONTACT_URL, "Contact");
+
+  /* ---------- Related cards ---------- */
+  var rel = $("related");
+  RELATED.forEach(function (r) {
+    var d = document.createElement("div"); d.className = "rel";
+    var t = document.createElement("div"); t.className = "t"; t.textContent = "Thumbnail";
+    var b = document.createElement("div"); b.className = "b";
+    var s1 = document.createElement("strong"); s1.textContent = r.title;
+    var s2 = document.createElement("span"); s2.textContent = r.note;
+    b.appendChild(s1); b.appendChild(s2); d.appendChild(t); d.appendChild(b); rel.appendChild(d);
+  });
+
+  /* ---------- Scale the fixed 468x60 banner on narrow screens ---------- */
+  function fitBanner() {
+    var box = $("bannerBox"), inner = $("bannerInner");
+    if (!box || !inner) return;
+    var s = Math.min(1, box.clientWidth / 468);
+    inner.style.transform = "scale(" + s + ")";
+    box.style.height = Math.ceil(60 * s) + "px";
+  }
+  fitBanner();
+  window.addEventListener("resize", fitBanner);
+  window.addEventListener("load", fitBanner);
+})();
+</script>
+</body>
+</html>
